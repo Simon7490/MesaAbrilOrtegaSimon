@@ -32,61 +32,48 @@ public class EventoController {
     @GetMapping
     public String listarEventos(Model model) {
         model.addAttribute("eventos", eventoService.listarEventosDisponibles());
-        model.addAttribute("view", "eventos/lista");
-        return "layout/nav";
+        return "eventos/lista";
     }
 
     @GetMapping("/nuevo")
     public String mostrarFormularioNuevo(Model model) {
-        model.addAttribute("evento", new Evento());
-        model.addAttribute("view", "eventos/form");
-        return "layout/nav";
+        Evento evento = new Evento();
+        model.addAttribute("evento", evento);
+        return "eventos/form";
     }
 
     @PostMapping("/nuevo")
-    public String guardarNuevoEvento(@Valid @ModelAttribute("evento") Evento evento, BindingResult result, Model model) {
+    public String guardarEvento(@Valid @ModelAttribute("evento") Evento evento, BindingResult result, Model model) {
         if (result.hasErrors()) {
-        System.out.println("Errores de binding: " + result.getAllErrors());
-            model.addAttribute("view", "eventos/form");
-            return "layout/nav";
+            model.addAttribute("evento", evento);
+            return "eventos/form";
         }
         eventoService.guardarEvento(evento);
         return "redirect:/eventos";
     }
 
-    @GetMapping("/evento/{id}")
-public String mostrarEvento(@PathVariable Long id, Model model) {
-    Evento evento = eventoService.obtenerEventoPorId(id);
-    model.addAttribute("evento", evento);
-    model.addAttribute("ticketsDisponibles", eventoService.obtenerTicketsDisponibles(id));
-    model.addAttribute("compra", new Compra());
-    model.addAttribute("view", "eventos/detalle");
-    return "layout/nav";
-}
-
-@GetMapping("/editar/{id}")
-public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
-    Evento evento = eventoService.obtenerEventoPorId(id);
-    model.addAttribute("evento", evento);
-    model.addAttribute("view", "eventos/form");
-    return "layout/nav";
-}
-
-@PostMapping("/eliminar/{id}")
-public String eliminarEvento(@PathVariable Long id) {
-    eventoService.eliminarEvento(id);
-    return "redirect:/eventos";
-}
-
-
-    @PostMapping("/guardar")
-    public String guardarEvento(@Valid @ModelAttribute Evento evento, BindingResult result, Model model) {
-        if (result.hasErrors()) {
-        System.out.println("Errores de binding: " + result.getAllErrors());
-            model.addAttribute("view", "eventos/form");
-            return "layout/nav";
+    @GetMapping("/detalle/{id}")
+    public String mostrarEvento(@PathVariable Long id, Model model) {
+        Evento evento = eventoService.obtenerEventoPorId(id);
+        if (evento == null) {
+            return "redirect:/eventos";
         }
-        eventoService.guardarEvento(evento);
+        model.addAttribute("evento", evento);
+        model.addAttribute("ticketsDisponibles", eventoService.obtenerTicketsDisponibles(id));
+        model.addAttribute("compra", new Compra());
+        return "eventos/detalle";
+    }
+
+    @GetMapping("/editar/{id}")
+    public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
+        Evento evento = eventoService.obtenerEventoPorId(id);
+        model.addAttribute("evento", evento);
+        return "eventos/form";
+    }
+
+    @GetMapping("/eliminar/{id}")
+    public String eliminarEvento(@PathVariable Long id) {
+        eventoService.eliminarEvento(id);
         return "redirect:/eventos";
     }
 
@@ -98,9 +85,19 @@ public String eliminarEvento(@PathVariable Long id) {
             Model model) {
         
         try {
+            // Validar que el cliente exista
             Cliente cliente = clienteService.obtenerClientePorId(clienteId);
+            if (cliente == null) {
+                model.addAttribute("error", "Cliente no encontrado");
+                return "redirect:/eventos/detalle/" + eventoId;
+            }
+
+            // Validar que el evento exista y tenga suficientes tickets disponibles
             Evento evento = eventoService.obtenerEventoPorId(eventoId);
-            
+            if (evento == null || eventoService.obtenerTicketsDisponibles(eventoId) < cantidadTickets) {
+                model.addAttribute("error", "No hay suficientes tickets disponibles");
+                return "redirect:/eventos/detalle/" + eventoId;
+            }
             Compra compra = new Compra();
             compra.setCliente(cliente);
             compra.setEvento(evento);
@@ -117,8 +114,7 @@ public String eliminarEvento(@PathVariable Long id) {
             model.addAttribute("ticketsDisponibles", eventoService.obtenerTicketsDisponibles(eventoId));
             model.addAttribute("compra", new Compra());
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("view", "eventos/detalle");
-            return "layout/nav";
+            return "eventos/detalle";
         }
     }
 

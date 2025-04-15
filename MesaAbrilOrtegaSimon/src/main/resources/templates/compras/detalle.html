@@ -1,19 +1,32 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<body th:fragment="content">
-    <div class="container py-4">
-        <h2>Detalle de la Compra</h2>
-        <div th:if="${compra}">
-            <ul class="list-group mb-4">
-                <li class="list-group-item"><strong>Cliente:</strong> <span th:text="${compra.cliente.nombre + ' ' + compra.cliente.apellido}"></span></li>
-                <li class="list-group-item"><strong>Evento:</strong> <span th:text="${compra.evento.nombre}"></span></li>
-                <li class="list-group-item"><strong>Cantidad de Tickets:</strong> <span th:text="${compra.cantidadTickets}"></span></li>
-                <li class="list-group-item"><strong>Total:</strong> $<span th:text="${compra.total}"></span></li>
-                <li class="list-group-item"><strong>Fecha de Compra:</strong> <span th:text="${#temporals.format(compra.fechaCompra, 'dd/MM/yyyy HH:mm')}"></span></li>
-            </ul>
+<head>
+    <title th:text="'Detalle de Compra - Gestión de Eventos'">Detalle de la Compra</title>
+</head>
+<body>
+    <div th:replace="nav :: content">
+        <div th:fragment="content">
+            <div class="container py-4">
+                <h2>Detalle de la Compra</h2>
+                <div th:if="${compra}">
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item"><strong>Cliente:</strong> <span th:text="${compra.cliente.nombre + ' ' + compra.cliente.apellido}"></span></li>
+                        <li class="list-group-item"><strong>Evento:</strong> <span th:text="${compra.evento.nombre}"></span></li>
+                        <li class="list-group-item"><strong>Cantidad de Tickets:</strong> <span th:text="${compra.cantidadTickets}"></span></li>
+                        <li class="list-group-item"><strong>Total:</strong> $<span th:text="${compra.total}"></span></li>
+                        <li class="list-group-item"><strong>Fecha de Compra:</strong> <span th:text="${#temporals.format(compra.fechaCompra, 'dd/MM/yyyy HH:mm')}"></span></li>
+                    </ul>
+                </div>
+                <div th:if="${error}" class="alert alert-danger">[[${error}]]</div>
+                <a th:href="@{/compras}" class="btn btn-secondary">Volver</a>
+                    <li class="list-group-item"><strong>Cantidad de Tickets:</strong> <span th:text="${compra.cantidadTickets}"></span></li>
+                    <li class="list-group-item"><strong>Total:</strong> $<span th:text="${compra.total}"></span></li>
+                    <li class="list-group-item"><strong>Fecha de Compra:</strong> <span th:text="${#temporals.format(compra.fechaCompra, 'dd/MM/yyyy HH:mm')}"></span></li>
+                </ul>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">[[${error}]]</div>
+            <a th:href="@{/compras}" class="btn btn-secondary">Volver</a>
         </div>
-        <div th:if="${error}" class="alert alert-danger">[[${error}]]</div>
-        <a th:href="@{/compras}" class="btn btn-secondary">Volver</a>
     </div>
 </body>
 </html>

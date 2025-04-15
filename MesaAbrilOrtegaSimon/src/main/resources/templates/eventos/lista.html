@@ -22,27 +22,27 @@
                             </ul>
                         </div>
                         <div class="card-footer bg-transparent border-top-0">
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-end">
                                 <div class="btn-group">
-    <a th:href="@{/compras/nueva/{id}(id=${evento.id})}"
-       class="btn btn-success"
-       th:classappend="${evento.capacidad == 0 ? 'disabled' : ''}"
-       th:disabled="${evento.capacidad == 0}"
-       th:title="${evento.capacidad == 0 ? 'Evento agotado' : 'Comprar tickets'}">
-        <i class="bi bi-cart-plus"></i> Comprar
-    </a>
-    <a th:href="@{/eventos/evento/{id}(id=${evento.id})}" class="btn btn-outline-primary">
-        <i class="bi bi-eye"></i>
-    </a>
-    <a th:href="@{/eventos/editar/{id}(id=${evento.id})}" class="btn btn-outline-secondary">
-        <i class="bi bi-pencil"></i>
-    </a>
+                                    <a th:href="@{/compras/nueva/{id}(id=${evento.id})}"
+                                       class="btn btn-success"
+                                       th:classappend="${evento.capacidad == 0 ? 'disabled' : ''}"
+                                       th:disabled="${evento.capacidad == 0}"
+                                       th:title="${evento.capacidad == 0 ? 'Evento agotado' : 'Comprar tickets'}">
+                                        <i class="bi bi-cart-plus"></i> Comprar
+                                    </a>
+                                    <a th:href="@{/eventos/detalle/{id}(id=${evento.id})}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a th:href="@{/eventos/editar/{id}(id=${evento.id})}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
 
                                     <form th:action="@{/eventos/eliminar/{id}(id=${evento.id})}" method="post" style="display:inline;">
-    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('¿Está seguro que desea eliminar este evento?');">
-        <i class="bi bi-trash"></i>
-    </button>
-</form>
+                                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('¿Está seguro que desea eliminar este evento?');">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
