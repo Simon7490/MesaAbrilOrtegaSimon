@@ -1,0 +1,68 @@
+<div th:fragment="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" th:text="${cliente.id == null ? 'Nuevo Cliente' : 'Editar Cliente'}">
+                                Formulario de Cliente
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Formulario para NUEVO cliente -->
+<form th:if="${cliente.id == null}" th:action="@{/clientes/nuevo}" th:object="${cliente}" method="post" class="needs-validation" novalidate>
+    <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+        Por favor corregí los errores marcados.
+    </div>
+                                
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="nombre" th:field="*{nombre}"
+                                           th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('nombre')}" 
+                                         th:errors="*{nombre}">Error en el nombre</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="apellido" class="form-label">Apellido</label>
+                                    <input type="text" class="form-control" id="apellido" th:field="*{apellido}"
+                                           th:classappend="${#fields.hasErrors('apellido')} ? 'is-invalid'" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('apellido')}" 
+                                         th:errors="*{apellido}">Error en el apellido</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" th:field="*{email}"
+                                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" 
+                                         th:errors="*{email}">Error en el email</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="dni" class="form-label">DNI</label>
+                                    <input type="text" class="form-control" id="dni" th:field="*{dni}"
+                                           pattern="\\d{8}" maxlength="8"
+                                           th:classappend="${#fields.hasErrors('dni')} ? 'is-invalid'" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('dni')}" 
+                                         th:errors="*{dni}">Error en el DNI</div>
+                                    <div class="form-text">El DNI debe contener exactamente 8 dígitos</div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save"></i> Guardar
+                                    </button>
+                                    <a th:href="@{/clientes}" class="btn btn-secondary">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,155 @@
+<div th:fragment="content">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Historial de Compras</h2>
+                <a th:href="@{/eventos}" class="btn btn-primary">
+    <i class="bi bi-cart-plus"></i> Comprar Tickets
+</a>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form th:action="@{/compras}" method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="clienteId" class="form-label">Cliente</label>
+                            <select class="form-select" id="clienteId" name="clienteId">
+                                <option value="">Todos los clientes</option>
+                                <option th:each="cliente : ${clientes}"
+                                        th:value="${cliente.id}"
+                                        th:text="${cliente.nombre + ' ' + cliente.apellido}"
+                                        th:selected="${param.clienteId != null and param.clienteId[0] == cliente.id.toString()}">
+                                    Cliente
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="eventoId" class="form-label">Evento</label>
+                            <select class="form-select" id="eventoId" name="eventoId">
+                                <option value="">Todos los eventos</option>
+                                <option th:each="evento : ${eventos}"
+                                        th:value="${evento.id}"
+                                        th:text="${evento.nombre}"
+                                        th:selected="${param.eventoId != null and param.eventoId[0] == evento.id.toString()}">
+                                    Evento
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="fechaDesde" class="form-label">Fecha desde</label>
+                            <input type="date" class="form-control" id="fechaDesde" name="fechaDesde"
+                                   th:value="${param.fechaDesde}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="fechaHasta" class="form-label">Fecha hasta</label>
+                            <input type="date" class="form-control" id="fechaHasta" name="fechaHasta"
+                                   th:value="${param.fechaHasta}">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Filtrar
+                            </button>
+                            <a th:href="@{/compras}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Limpiar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Cards de compras -->
+            <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+                <div th:each="compra : ${compras}" class="col">
+                    <div class="card h-100" th:classappend="${compra.fechaCompra.isAfter(T(java.time.LocalDateTime).now().minusDays(1))} ? 'border-success'">
+
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <i class="bi bi-calendar"></i>
+                                    <span th:text="${#temporals.format(compra.fechaCompra, 'dd/MM/yyyy HH:mm')}">Fecha</span>
+                                </span>
+                                <span class="badge bg-primary rounded-pill">
+                                    <i class="bi bi-ticket-perforated"></i>
+                                    <span th:text="${#numbers.formatInteger(compra.cantidadTickets, 1)}">Cantidad</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a th:href="@{/eventos/{id}(id=${compra.evento.id})}" 
+                                   class="text-decoration-none"
+                                   th:text="${compra.evento.nombre}">Evento</a>
+                            </h5>
+                            <p class="card-text">
+                                <i class="bi bi-person"></i>
+                                <a th:href="@{/compras/cliente/{id}(id=${compra.cliente.id})}" 
+                                   class="text-decoration-none"
+                                   th:text="${compra.cliente.nombre + ' ' + compra.cliente.apellido}">Cliente</a>
+                            </p>
+                            <h6 class="card-subtitle mb-2 text-success">
+                                <i class="bi bi-cash"></i>
+                                <span th:text="${'$' + #numbers.formatDecimal(compra.total, 0, 'POINT', 2, 'COMMA')}">Total</span>
+                            </h6>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <div class="d-flex justify-content-end">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    th:data-bs-target="${'#deleteModal' + compra.id}"
+                                                    title="Cancelar compra">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Modal de confirmación de cancelación -->
+                                        <div class="modal fade" th:id="${'deleteModal' + compra.id}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Confirmar cancelación</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        ¿Está seguro que desea cancelar esta compra?<br>
+                                                        <small class="text-muted">
+                                                            Esta acción liberará los tickets reservados para el evento.
+                                                        </small>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                                                        <form th:action="@{/compras/{id}/cancelar(id=${compra.id})}"
+                                                              method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-danger">Sí, cancelar</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot th:if="${not #lists.isEmpty(compras)}">
+                                <tr class="table-info">
+                                    <td colspan="3"><strong>Total</strong></td>
+                                    <td><strong th:text="${#aggregates.sum(compras.![cantidadEntradas])}">0</strong></td>
+                                    <td colspan="2">
+                                        <strong th:text="${'$' + #numbers.formatDecimal(#aggregates.sum(compras.![total]), 0, 'POINT', 2, 'COMMA')}">
+                                            $0.00
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Mensaje cuando no hay compras -->
+                    <div th:if="${#lists.isEmpty(compras)}" class="alert alert-info text-center">
+                        <i class="bi bi-info-circle"></i> No hay compras registradas.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

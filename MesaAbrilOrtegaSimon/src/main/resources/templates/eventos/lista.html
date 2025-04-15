@@ -1,0 +1,80 @@
+<div th:fragment="content">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Eventos Disponibles</h2>
+                <a th:href="@{/eventos/nuevo}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nuevo Evento
+                </a>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div th:each="evento : ${eventos}" class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${evento.nombre}">Nombre del Evento</h5>
+                            <p class="card-text" th:text="${#strings.abbreviate(evento.descripcion, 100)}">Descripción</p>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-calendar"></i> <span th:text="${#temporals.format(evento.fecha, 'dd/MM/yyyy HH:mm')}">Fecha</span></li>
+                                <li><i class="bi bi-geo-alt"></i> <span th:text="${evento.lugar}">Lugar</span></li>
+                                <li><i class="bi bi-ticket-perforated"></i> <span th:text="${evento.capacidad + ' tickets disponibles'}">Capacidad</span></li>
+                                <li><i class="bi bi-tag"></i> <span th:text="${'$' + #numbers.formatDecimal(evento.precio, 0, 'POINT', 2, 'COMMA')}">Precio</span></li>
+                                <li><i class="bi bi-bookmark"></i> <span th:text="${evento.tipoEvento}">Tipo</span></li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <div class="d-flex justify-content-between">
+                                <div class="btn-group">
+    <a th:href="@{/compras/nueva/{id}(id=${evento.id})}"
+       class="btn btn-success"
+       th:classappend="${evento.capacidad == 0 ? 'disabled' : ''}"
+       th:disabled="${evento.capacidad == 0}"
+       th:title="${evento.capacidad == 0 ? 'Evento agotado' : 'Comprar tickets'}">
+        <i class="bi bi-cart-plus"></i> Comprar
+    </a>
+    <a th:href="@{/eventos/evento/{id}(id=${evento.id})}" class="btn btn-outline-primary">
+        <i class="bi bi-eye"></i>
+    </a>
+    <a th:href="@{/eventos/editar/{id}(id=${evento.id})}" class="btn btn-outline-secondary">
+        <i class="bi bi-pencil"></i>
+    </a>
+
+                                    <form th:action="@{/eventos/eliminar/{id}(id=${evento.id})}" method="post" style="display:inline;">
+    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('¿Está seguro que desea eliminar este evento?');">
+        <i class="bi bi-trash"></i>
+    </button>
+</form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal de confirmación de eliminación -->
+                    <div class="modal fade" th:id="${'deleteModal' + evento.id}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirmar eliminación</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ¿Está seguro que desea eliminar el evento <span th:text="${evento.nombre}"></span>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <form th:action="@{/eventos/{id}/eliminar(id=${evento.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje cuando no hay eventos -->
+            <div th:if="${#lists.isEmpty(eventos)}" class="alert alert-info text-center">
+                <i class="bi bi-info-circle"></i> No hay eventos disponibles.
+            </div>
+        </div>
+    </div>
+</div>

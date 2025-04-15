@@ -1,0 +1,257 @@
+<div th:fragment="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Nueva Compra</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Información del evento -->
+                            <div th:if="${evento != null}" class="alert alert-info mb-4">
+                                <h4 class="alert-heading" th:text="${evento.nombre}">Nombre del Evento</h4>
+                                <p class="mb-0" th:text="${evento.descripcion}">Descripción del evento</p>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1">
+                                            <i class="bi bi-calendar"></i>
+                                            <strong>Fecha:</strong>
+                                            <span th:text="${evento.fecha}">Fecha</span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <i class="bi bi-geo-alt"></i>
+                                            <strong>Lugar:</strong>
+                                            <span th:text="${evento.lugar}">Lugar</span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1">
+                                            <i class="bi bi-ticket-perforated"></i>
+                                            <strong>Tickets disponibles:</strong>
+                                            <span th:text="${evento.capacidad}">Capacidad</span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <i class="bi bi-tag"></i>
+                                            <strong>Precio por ticket:</strong>
+                                            <span>$<span th:text="${evento.precio}"></span></span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Selección de evento si evento es nulo (caso /compras/nuevo) -->
+                            <div th:if="${evento == null}" class="mb-4">
+                                <label for="eventoId" class="form-label">Evento</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="eventoId" th:field="*{evento}" required>
+                                        <option value="">Seleccione un evento</option>
+                                        <option th:each="ev : ${eventos}"
+                                                th:value="${ev.id}"
+                                                th:text="${ev.nombre + ' - ' + ev.fecha}">
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Selección de cliente -->
+                            <div class="mb-4">
+                                <label for="clienteId" class="form-label">Cliente</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="clienteId" th:field="*{cliente}" required>
+                                        <option value="">Seleccione un cliente</option>
+                                        <option th:each="cliente : ${clientes}"
+                                                th:value="${cliente}"
+                                                th:text="${cliente.nombre + ' ' + cliente.apellido + ' - DNI: ' + cliente.dni}">
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Cantidad de tickets -->
+                            <div class="mb-4">
+                                <label for="cantidadTickets" class="form-label">Cantidad de tickets</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="cantidadTickets" th:field="*{cantidadTickets}"
+                                           min="1" max="${evento.capacidad}" required>
+                                    <span class="input-group-text">
+                                        <i class="bi bi-ticket-perforated"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Resumen de compra -->
+                            <div class="alert alert-success mb-4">
+                                <h5 class="alert-heading">Resumen de compra</h5>
+                                <p class="mb-1">
+                                    <strong>Tickets seleccionados:</strong>
+                                    <span id="ticketsSeleccionados">0</span>
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Precio unitario:</strong>
+                                    <span id="precioUnitario">$0</span>
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Total a pagar:</strong>
+                                    <span id="totalCompra">$0</span>
+                                </p>
+                            </div>
+
+                            <form th:action="@{/compras/guardar}" th:object="${compra}"
+                                  method="post" class="needs-validation" novalidate>
+                                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                                    Por favor corregí los errores marcados.
+                                </div>
+
+                                <!-- Selección de cliente -->
+                                <div class="mb-4">
+                                    <label for="clienteId" class="form-label">Cliente</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="cliente" th:field="*{cliente}"
+                                                th:classappend="${#fields.hasErrors('cliente')} ? 'is-invalid'" required>
+                                            <option value="">Seleccione un cliente</option>
+                                            <option th:each="cliente : ${clientes}"
+                                                    th:value="${cliente}"
+                                                    th:text="${cliente.nombre + ' ' + cliente.apellido + ' - DNI: ' + cliente.dni}">
+                                            </option>
+                                        </select>
+                                        <a th:href="@{/clientes/nuevo}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-person-plus"></i> Nuevo Cliente
+                                        </a>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('clienteId')}" 
+                                             th:errors="*{clienteId}">Error en el cliente</div>
+                                    </div>
+                                </div>
+
+                                <!-- Cantidad de tickets -->
+                                <div class="mb-4">
+                                    <label for="cantidadEntradas" class="form-label">Cantidad de Tickets</label>
+                                    <input type="number" class="form-control" id="cantidadTickets" 
+                                           th:field="*{cantidadTickets}"
+                                           min="1" th:max="${evento.capacidad}"
+                                           th:classappend="${#fields.hasErrors('cantidadTickets')} ? 'is-invalid'"
+                                           required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('cantidadTickets')}" 
+                                         th:errors="*{cantidadTickets}">Error en la cantidad</div>
+                                </div>
+
+                                <!-- Total de la compra -->
+                                <div class="mb-4">
+                                    <label for="total" class="form-label">Total</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="text" class="form-control" id="total" readonly>
+                                    </div>
+                                </div>
+
+                                <!-- Resumen de la compra -->
+                                <div class="card bg-light mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Resumen de la compra</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p class="mb-1">Precio por ticket: 
+                                                    <span>$<span th:text="${evento.precio}"></span></span>
+                                                        Precio
+                                                    </span>
+                                                </p>
+                                                <p class="mb-1">Cantidad: 
+                                                    <span id="cantidadResumen">0</span>
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p class="mb-1">
+                                                    <strong>Total a pagar: </strong>
+                                                    <span id="totalResumen" class="text-primary fs-5">$0.00</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-cart-check"></i> Confirmar Compra
+                                    </button>
+                                    <a th:href="@{/eventos}" class="btn btn-secondary">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="layout/layout :: footer"></div>
+    <div th:replace="layout/layout :: scripts"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cantidadInput = document.getElementById('cantidadTickets');
+            const precioUnitario = document.getElementById('precioUnitario');
+            const ticketsSeleccionados = document.getElementById('ticketsSeleccionados');
+            const totalCompra = document.getElementById('totalCompra');
+            const precio = parseFloat(document.querySelector('[th:text="${evento.precio}"]').textContent);
+
+            // Actualizar el precio unitario
+            precioUnitario.textContent = `$${precio.toFixed(2)}`;
+
+            // Función para actualizar el resumen
+            function actualizarResumen() {
+                const cantidad = parseInt(cantidadInput.value) || 0;
+                ticketsSeleccionados.textContent = cantidad;
+                const total = cantidad * precio;
+                totalCompra.textContent = `$${total.toFixed(2)}`;
+            }
+
+            // Actualizar al cambiar la cantidad
+            cantidadInput.addEventListener('input', actualizarResumen);
+            
+            // Actualizar al cargar la página
+            actualizarResumen();
+        });
+    </script>
+
+    <script th:inline="javascript">
+        // Obtener el precio del evento desde Thymeleaf
+        const precioTicket = /*[[${evento.precio}]]*/ 0;
+
+        // Actualizar el resumen cuando cambie la cantidad
+        const cantidadInput = document.getElementById('cantidadEntradas');
+        const cantidadResumen = document.getElementById('cantidadResumen');
+        const totalResumen = document.getElementById('totalResumen');
+        const totalInput = document.getElementById('total');
+
+        function actualizarResumen() {
+            const cantidad = cantidadInput.value ? parseInt(cantidadInput.value) : 0;
+            const total = cantidad * precioTicket;
+            
+            cantidadResumen.textContent = cantidad;
+            totalResumen.textContent = '$' + total.toFixed(2);
+            totalInput.value = total.toFixed(2);
+        }
+
+        cantidadInput.addEventListener('input', actualizarResumen);
+        actualizarResumen(); // Actualizar al cargar la página
+
+        // Validación del formulario
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+</body>
+</html>

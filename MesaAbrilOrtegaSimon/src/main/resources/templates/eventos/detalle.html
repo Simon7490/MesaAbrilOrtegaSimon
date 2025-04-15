@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body th:fragment="content">
+    <div class="container py-4">
+        <h2>Detalle del Evento</h2>
+        <div th:if="${evento}">
+            <ul class="list-group mb-4">
+                <li class="list-group-item"><strong>Nombre:</strong> <span th:text="${evento.nombre}"></span></li>
+                <li class="list-group-item"><strong>Descripción:</strong> <span th:text="${evento.descripcion}"></span></li>
+                <li class="list-group-item"><strong>Fecha:</strong> <span th:text="${#temporals.format(evento.fecha, 'dd/MM/yyyy HH:mm')}"></span></li>
+                <li class="list-group-item"><strong>Lugar:</strong> <span th:text="${evento.lugar}"></span></li>
+                <li class="list-group-item"><strong>Precio:</strong> $<span th:text="${evento.precio}"></span></li>
+                <li class="list-group-item"><strong>Capacidad:</strong> <span th:text="${evento.capacidad}"></span></li>
+                <li class="list-group-item"><strong>Tipo:</strong> <span th:text="${evento.tipo}"></span></li>
+            </ul>
+        </div>
+        <div th:if="${error}" class="alert alert-danger">[[${error}]]</div>
+        <a th:href="@{/eventos}" class="btn btn-secondary">Volver</a>
+    </div>
+</body>
+</html>

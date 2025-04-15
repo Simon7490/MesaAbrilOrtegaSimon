@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Sistema de Venta de Tickets</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .stats-card {
+            transition: transform 0.3s ease;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        .menu-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .card {
+            transition: all 0.3s ease;
+            border: none;
+            border-radius: 15px;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+        }
+        .btn {
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .display-4 {
+            font-weight: 700;
+        }
+        .lead {
+            font-size: 1.4rem;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<th:block th:with="title='Inicio'">
+<body class="d-flex flex-column min-vh-100" th:fragment="content">
+        <div class="container py-5">
+            <div class="row mb-5">
+                <div class="col-12 text-center">
+                    <h1 class="display-3 fw-bold mb-3">Sistema de Venta de Tickets</h1>
+                    <p class="lead text-muted">Gestión eficiente y moderna de eventos, clientes y compras de tickets</p>
+                </div>
+            </div>
+
+            <!-- Eventos activos -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2 class="mb-4 text-primary"><i class="bi bi-calendar-event"></i> Eventos Activos</h2>
+                </div>
+            </div>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div th:each="evento : ${eventos}" class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${evento.nombre}">Nombre del Evento</h5>
+                            <p class="card-text" th:text="${#strings.abbreviate(evento.descripcion, 100)}">Descripción</p>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-calendar"></i> <span th:text="${#temporals.format(evento.fecha, 'dd/MM/yyyy HH:mm')}">Fecha</span></li>
+                                <li><i class="bi bi-geo-alt"></i> <span th:text="${evento.lugar}">Lugar</span></li>
+                                <li><i class="bi bi-ticket-perforated"></i> <span th:text="${evento.capacidad + ' tickets disponibles'}">Capacidad</span></li>
+                                <li><i class="bi bi-tag"></i> <span>$<span th:text="${evento.precio}"></span></span></li>
+                                <li><i class="bi bi-bookmark"></i> <span th:text="${evento.tipoEvento}">Tipo</span></li>
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/compras/nuevo/{id}(id=${evento.id})}"
+                                   class="btn btn-success"
+                                   th:classappend="${evento.capacidad == 0 ? 'disabled' : ''}"
+                                   th:disabled="${evento.capacidad == 0}"
+                                   th:title="${evento.capacidad == 0 ? 'Evento agotado' : 'Comprar tickets'}">
+                                    <i class="bi bi-cart-plus"></i> Comprar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(eventos)}" class="alert alert-info text-center mt-4">
+                <i class="bi bi-info-circle"></i> No hay eventos disponibles.
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="stats-card card text-center bg-primary bg-gradient text-white h-100">
+                        <div class="card-body py-4">
+                            <i class="bi bi-calendar-event menu-icon"></i>
+                            <h3 class="card-title h4 mb-3">Eventos Activos</h3>
+                            <p class="display-4 mb-0 fw-bold" th:text="${#lists.size(eventos)}">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card card text-center bg-success bg-gradient text-white h-100">
+                        <div class="card-body py-4">
+                            <i class="bi bi-people menu-icon"></i>
+                            <h3 class="card-title h4 mb-3">Clientes Registrados</h3>
+                            <p class="display-4 mb-0 fw-bold" th:text="${#lists.size(clientes)}">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card card text-center bg-info bg-gradient text-white h-100">
+                        <div class="card-body py-4">
+                            <i class="bi bi-ticket-perforated menu-icon"></i>
+                            <h3 class="card-title h4 mb-3">Compras Realizadas</h3>
+                            <p class="display-4 mb-0 fw-bold" th:text="${#lists.size(compras)}">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <!-- Eventos -->
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-calendar-event display-4 text-primary mb-3"></i>
+                            <h2 class="h4 card-title">Eventos</h2>
+                            <p class="card-text">Explora nuestra lista de eventos disponibles y administra la programación.</p>
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/eventos}" class="btn btn-primary">
+                                    <i class="bi bi-arrow-right-circle"></i> Ver Eventos
+                                </a>
+                                <a th:href="@{/eventos/nuevo}" class="btn btn-outline-primary">
+                                    <i class="bi bi-plus-circle"></i> Nuevo Evento
+                                </a>
+                                <a th:href="@{/eventos}" class="btn btn-outline-info">
+                                    <i class="bi bi-plus-circle"></i> Ver Eventos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clientes -->
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people display-4 text-success mb-3"></i>
+                            <h2 class="h4 card-title">Clientes</h2>
+                            <p class="card-text">Gestiona la información de tus clientes y sus historiales de compra.</p>
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/clientes}" class="btn btn-success">
+                                    <i class="bi bi-arrow-right-circle"></i> Ver Clientes
+                                </a>
+                                <a th:href="@{/clientes/nuevo}" class="btn btn-outline-success">
+                                    <i class="bi bi-plus-circle"></i> Nuevo Cliente
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compras -->
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-cart display-4 text-info mb-3"></i>
+                            <h2 class="h4 card-title">Compras</h2>
+                            <p class="card-text">Revisa el historial de compras y gestiona las transacciones.</p>
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/compras}" class="btn btn-info text-white">
+    <i class="bi bi-arrow-right-circle"></i> Ver Compras
+</a>
+<a th:href="@{/compras/nuevo}" class="btn btn-outline-info">
+    <i class="bi bi-plus-circle"></i> Nueva Compra
+</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas o información adicional -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h3 class="h5 card-title">Resumen del Sistema</h3>
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="fs-2 text-primary" th:text="${#lists.size(eventos)}">0</div>
+                                    <div class="text-muted">Eventos Activos</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="fs-2 text-success" th:text="${#lists.size(clientes)}">0</div>
+                                    <div class="text-muted">Clientes Registrados</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="fs-2 text-info" th:text="${#lists.size(compras)}">0</div>
+                                    <div class="text-muted">Compras Realizadas</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+</body>
+</html>

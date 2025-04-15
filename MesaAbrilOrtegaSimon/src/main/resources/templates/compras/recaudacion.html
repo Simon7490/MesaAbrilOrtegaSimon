@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body th:fragment="content">
+    <div class="container py-4">
+        <h2 class="mb-4">Recaudación por Eventos</h2>
+        
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Evento</th>
+                                <th>Tickets Vendidos</th>
+                                <th>Precio por Ticket</th>
+                                <th>Recaudación Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="compra : ${compras}">
+                                <td th:text="${compra.evento.nombre}"></td>
+                                <td th:text="${compra.cantidadTickets}"></td>
+                                <td th:text="${'$' + #numbers.formatDecimal(compra.evento.precio, 0, 'COMMA', 2, 'POINT')}"></td>
+                                <td th:text="${'$' + #numbers.formatDecimal(compra.cantidadTickets * compra.evento.precio, 0, 'COMMA', 2, 'POINT')}"></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <td colspan="3" class="text-end fw-bold">Recaudación Total:</td>
+                                <td th:text="${'$' + #numbers.formatDecimal(#aggregates.sum(compras.![cantidadTickets * evento.precio]), 0, 'COMMA', 2, 'POINT')}" class="fw-bold"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
