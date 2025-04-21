@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ar.edu.unju.fi.exception.EventoNoEncontradoException;
+import ar.edu.unju.fi.exception.InvalidCapacityException;
 import ar.edu.unju.fi.model.Evento;
 import ar.edu.unju.fi.model.TipoEvento;
 import ar.edu.unju.fi.repository.EventoRepository;
@@ -24,6 +26,13 @@ public class EventoService {
      */
     public List<Evento> listarEventos() {
         return eventoRepository.findByFechaAfterOrderByFechaAsc(LocalDateTime.now());
+    }
+
+    /**
+     * Lista todos los eventos con sus precios
+     */
+    public List<Evento> listarEventosConPrecios() {
+        return eventoRepository.findAll();
     }
 
     /**
@@ -45,16 +54,21 @@ public class EventoService {
      */
     @Transactional
     public Evento guardarEvento(Evento evento) {
+        if (evento.getCapacidad() < 0) {
+            throw new InvalidCapacityException("La capacidad no puede ser negativa.");
+        }
+        
         if (evento.getCapacidadInicial() == null) {
             evento.setCapacidadInicial(evento.getCapacidad());
         }
+        
         if (evento.getId() != null) {
             // Si es una actualización, validar que no tenga compras si se reduce la capacidad
             Evento eventoExistente = obtenerEventoPorId(evento.getId());
             if (evento.getCapacidad() < eventoExistente.getCapacidad()) {
                 int ticketsVendidos = eventoRepository.getTicketsVendidos(evento.getId());
                 if (evento.getCapacidad() < ticketsVendidos) {
-                    throw new RuntimeException("No se puede reducir la capacidad por debajo de los tickets vendidos");
+                    throw new InvalidCapacityException("No se puede reducir la capacidad por debajo de los tickets vendidos");
                 }
             }
         }
@@ -64,21 +78,17 @@ public class EventoService {
     /**
      * Obtiene un evento por su ID
      */
+    @Transactional
     public Evento obtenerEventoPorId(Long id) {
-        return eventoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+        return eventoRepository.findById(id).orElse(null);
     }
 
     /**
      * Elimina un evento verificando que no tenga compras
      */
     @Transactional
-    public void eliminarEvento(Long id) {
-        Evento evento = obtenerEventoPorId(id);
-        if (!evento.getCompras().isEmpty()) {
-            throw new RuntimeException("No se puede eliminar un evento con compras realizadas");
-        }
-        eventoRepository.delete(evento);
+    public void eliminar(Long id) {
+        eventoRepository.deleteById(id);
     }
 
     /**

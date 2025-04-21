@@ -1,57 +1,24 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Compras - Gestión de Compras'">Lista de Compras</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="layout/nav :: nav"></div>
 <div th:fragment="content">
-        <div class="container">
+        <div th:if="${_csrf} != null" class="container">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Historial de Compras</h2>
-                <a th:href="@{/eventos}" class="btn btn-primary">
-    <i class="bi bi-cart-plus"></i> Comprar Tickets
-</a>
+                <a href="/compras/nueva" class="btn btn-primary">
+                    <i class="bi bi-cart-plus"></i> Nueva compra
+                </a>
             </div>
 
-            <!-- Filtros -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form th:action="@{/compras}" method="get" class="row g-3">
-                        <div class="col-md-3">
-                            <label for="clienteId" class="form-label">Cliente</label>
-                            <select class="form-select" id="clienteId" name="clienteId">
-                                <option value="">Todos los clientes</option>
-                                <option th:each="cliente : ${clientes}"
-                                        th:value="${cliente.id}"
-                                        th:text="${cliente.nombre + ' ' + cliente.apellido}"
-                                        th:selected="${param.clienteId != null and param.clienteId[0] == cliente.id.toString()}">
-                                    Cliente
-                                </option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="eventoId" class="form-label">Evento</label>
-                            <select class="form-select" id="eventoId" name="eventoId">
-                                <option value="">Todos los eventos</option>
-                                <option th:each="evento : ${eventos}"
-                                        th:value="${evento.id}"
-                                        th:text="${evento.nombre}"
-                                        th:selected="${param.eventoId != null and param.eventoId[0] == evento.id.toString()}">
-                                    Evento
-                                </option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="fechaDesde" class="form-label">Fecha desde</label>
-                            <input type="date" class="form-control" id="fechaDesde" name="fechaDesde"
-                                   th:value="${param.fechaDesde}">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="fechaHasta" class="form-label">Fecha hasta</label>
-                            <input type="date" class="form-control" id="fechaHasta" name="fechaHasta"
-                                   th:value="${param.fechaHasta}">
-                        </div>
-                        <div class="col-12 mt-3">
-                            <button type="submit" class="btn btn-primary">Filtrar</button>
-                            <a th:href="@{/compras}" class="btn btn-secondary">Limpiar filtros</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+
 
             <!-- Cards de compras -->
             <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
@@ -71,61 +38,60 @@
                         <div class="card-body">
                             <h5 class="card-title">
                                 <i class="bi bi-person"></i>
-                                <span th:text="${compra.cliente.nombre + ' ' + compra.cliente.apellido}">Nombre del Cliente</span>
+                                <span th:text="${compra.cliente?.nombre + ' ' + compra.cliente?.apellido}">Nombre del Cliente</span>
                             </h5>
                             <p class="card-text">
                                 <i class="bi bi-ticket-perforated"></i>
-                                <span th:text="${compra.cantidadTickets + ' tickets de ' + compra.evento.nombre}">Tickets</span>
+                                <span th:text="${compra.cantidadTickets + ' tickets de ' + compra.evento?.nombre}">Tickets</span>
                             </p>
                             <ul class="list-unstyled mb-3">
                                 <li class="mb-2">
                                     <i class="bi bi-geo-alt"></i>
-                                    <span th:text="${compra.evento.lugar}">Lugar</span>
+                                    <span th:text="${compra.evento?.lugar}">Lugar</span>
                                 </li>
                                 <li class="mb-2">
                                     <i class="bi bi-calendar"></i>
-                                    <span th:text="${#temporals.format(compra.evento.fecha, 'dd/MM/yyyy HH:mm')}">Fecha del Evento</span>
+                                    <span th:text="${#temporals.format(compra.evento?.fecha, 'dd/MM/yyyy HH:mm')}">Fecha del Evento</span>
                                 </li>
                             </ul>
                         </div>
 
                         <div class="card-footer bg-transparent border-top-0">
                             <div class="d-flex justify-content-end">
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-danger btn-sm"
-                                            data-bs-toggle="modal"
-                                            th:data-bs-target="${'#deleteModal' + compra.id}">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/compras/editar/{id}(id=${compra.id})}" 
+                                           class="btn btn-outline-secondary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    <form th:action="@{/compras/eliminar/{id}(id=${compra.id})}" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('¿Está seguro que desea eliminar esta compra?');">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Modal de confirmación de eliminación -->
-                    <div class="modal fade" th:id="${'deleteModal' + compra.id}" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Confirmar eliminación</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    ¿Está seguro que desea eliminar la compra de 
-                                    <span th:text="${compra.cliente.nombre + ' ' + compra.cliente.apellido}">Cliente</span>?
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <form th:action="@{/compras/eliminar/{id}(id=${compra.id})}" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-danger">Eliminar</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Mensaje cuando no hay compras -->
+    <div th:if="${#lists.isEmpty(compras)}" class="alert alert-info text-center">
+        <i class="bi bi-info-circle"></i> No hay compras registradas.
+    </div>
+
+
+
 </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+</body>
+</html>

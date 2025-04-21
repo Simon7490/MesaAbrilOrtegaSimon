@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ar.edu.unju.fi.model.Cliente;
 import ar.edu.unju.fi.service.ClienteService;
 import jakarta.validation.Valid;
@@ -29,25 +29,43 @@ public class ClienteController {
         return "clientes/form";
     }
 
-    @PostMapping("/nuevo")
-    public String guardarCliente(@Valid @ModelAttribute("cliente") Cliente cliente, BindingResult result, Model model) {
+    @PostMapping("/guardar")
+    public String guardarCliente(@Valid @ModelAttribute("cliente") Cliente cliente, BindingResult result, Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "clientes/form";
         }
-        clienteService.guardarCliente(cliente);
-        return "redirect:/clientes";
+        try {
+            clienteService.guardarCliente(cliente);
+            redirectAttributes.addFlashAttribute("success", "Cliente guardado con éxito");
+            return "redirect:/clientes";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "clientes/form";
+        }
     }
 
     @GetMapping("/editar/{id}")
-    public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
-        model.addAttribute("cliente", clienteService.obtenerClientePorId(id));
-        return "clientes/form";
+    public String editarCliente(@PathVariable Long id, Model model) {
+        try {
+            Cliente cliente = clienteService.obtenerClientePorId(id);
+            model.addAttribute("cliente", cliente);
+            return "clientes/form";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error al obtener el cliente: " + e.getMessage());
+            return "redirect:/clientes";
+        }
     }
 
-    @GetMapping("/eliminar/{id}")
-    public String eliminarCliente(@PathVariable Long id) {
-        clienteService.eliminarCliente(id);
-        return "redirect:/clientes";
+    @PostMapping("/eliminar/{id}")
+    public String eliminarCliente(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            clienteService.eliminarCliente(id);
+            redirectAttributes.addFlashAttribute("success", "Cliente eliminado con éxito");
+            return "redirect:/clientes";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/clientes";
+        }
     }
 
     @GetMapping("/compradores")

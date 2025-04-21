@@ -23,12 +23,14 @@ public class Compra {
     @JoinColumn(name = "evento_id", nullable = false)
     private Evento evento;
 
+    @Transient
+    private Long eventoId;
+
     @NotNull(message = "La cantidad de tickets es obligatoria")
     @Min(value = 1, message = "Debe comprar al menos 1 ticket")
     @Column(nullable = false)
     private Integer cantidadTickets;
 
-    @NotNull(message = "El total es obligatorio")
     @Positive(message = "El total debe ser mayor a 0")
     @Column(nullable = false)
     private Double total;
@@ -60,6 +62,20 @@ public class Compra {
 
     public void setEvento(Evento evento) {
         this.evento = evento;
+        this.eventoId = evento != null ? evento.getId() : null;
+    }
+
+    public Long getEventoId() {
+        return eventoId;
+    }
+
+    public void setEventoId(Long eventoId) {
+        this.eventoId = eventoId;
+        if (eventoId != null) {
+            Evento evento = new Evento();
+            evento.setId(eventoId);
+            this.evento = evento;
+        }
     }
 
     public Integer getCantidadTickets() {

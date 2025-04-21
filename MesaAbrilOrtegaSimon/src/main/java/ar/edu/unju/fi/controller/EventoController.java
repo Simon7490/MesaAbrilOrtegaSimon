@@ -5,16 +5,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.validation.BindingResult;
 
 import ar.edu.unju.fi.model.Cliente;
 import ar.edu.unju.fi.model.Compra;
 import ar.edu.unju.fi.model.Evento;
+import ar.edu.unju.fi.exception.EventoNoEncontradoException;
 import ar.edu.unju.fi.service.ClienteService;
 import ar.edu.unju.fi.service.CompraService;
 import ar.edu.unju.fi.service.EventoService;
-
-import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping("/eventos")
@@ -30,7 +30,7 @@ public class EventoController {
     private CompraService compraService;
 
     @GetMapping
-    public String listarEventos(Model model) {
+    public String listarEventos(Model model, RedirectAttributes redirectAttributes) {
         model.addAttribute("eventos", eventoService.listarEventosDisponibles());
         return "eventos/lista";
     }
@@ -48,75 +48,76 @@ public class EventoController {
             model.addAttribute("evento", evento);
             return "eventos/form";
         }
-        eventoService.guardarEvento(evento);
-        return "redirect:/eventos";
+        
+        try {
+            eventoService.guardarEvento(evento);
+            return "redirect:/eventos";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error al guardar el evento: " + e.getMessage());
+            return "eventos/form";
+        }
     }
 
-    @GetMapping("/detalle/{id}")
+    @GetMapping("/evento/detalle/{id}")
     public String mostrarEvento(@PathVariable Long id, Model model) {
-        Evento evento = eventoService.obtenerEventoPorId(id);
-        if (evento == null) {
-            return "redirect:/eventos";
+        try {
+            Evento evento = eventoService.obtenerEventoPorId(id);
+            if (evento == null) {
+                throw new EventoNoEncontradoException("El evento no existe.");
+            }
+            
+            int ticketsDisponibles = eventoService.obtenerTicketsDisponibles(id);
+            if (ticketsDisponibles == 0) {
+                model.addAttribute("eventoAgotado", true);
+            }
+            
+            model.addAttribute("evento", evento);
+            model.addAttribute("ticketsDisponibles", ticketsDisponibles);
+            model.addAttribute("compra", new Compra());
+            model.addAttribute("clientes", clienteService.listarClientes());
+            return "eventos/detalle";
+        } catch (EventoNoEncontradoException e) {
+            model.addAttribute("error", e.getMessage());
+            return "eventos/error";
+        } catch (Exception e) {
+            model.addAttribute("error", "Ocurrió un error al cargar el evento: " + e.getMessage());
+            return "eventos/error";
         }
-        model.addAttribute("evento", evento);
-        model.addAttribute("ticketsDisponibles", eventoService.obtenerTicketsDisponibles(id));
-        model.addAttribute("compra", new Compra());
-        return "eventos/detalle";
     }
 
     @GetMapping("/editar/{id}")
-    public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
-        Evento evento = eventoService.obtenerEventoPorId(id);
-        model.addAttribute("evento", evento);
-        return "eventos/form";
+    public String editarEvento(@PathVariable Long id, Model model) {
+        try {
+            Evento evento = eventoService.obtenerEventoPorId(id);
+            model.addAttribute("evento", evento);
+            return "eventos/form";
+        } catch (EventoNoEncontradoException e) {
+            return "redirect:/eventos";
+        }
     }
 
     @GetMapping("/eliminar/{id}")
-    public String eliminarEvento(@PathVariable Long id) {
-        eventoService.eliminarEvento(id);
+    public String mostrarConfirmacionEliminacion(@PathVariable Long id, Model model) {
+        Evento evento = eventoService.obtenerEventoPorId(id);
+        if (evento == null) {
+            return "redirect:/eventos?error=Evento no encontrado";
+        }
+        model.addAttribute("evento", evento);
+        return "eventos/confirmar-eliminacion";
+    }
+
+    @PostMapping("/eliminar/{id}")
+    public String eliminarEvento(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            eventoService.eliminar(id);
+            redirectAttributes.addFlashAttribute("success", "Evento eliminado con éxito.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "No se pudo eliminar el evento.");
+        }
         return "redirect:/eventos";
     }
 
-    @PostMapping("/comprar/{eventoId}")
-    public String comprarTickets(
-            @PathVariable Long eventoId,
-            @RequestParam("clienteId") Long clienteId,
-            @RequestParam("cantidadTickets") int cantidadTickets,
-            Model model) {
-        
-        try {
-            // Validar que el cliente exista
-            Cliente cliente = clienteService.obtenerClientePorId(clienteId);
-            if (cliente == null) {
-                model.addAttribute("error", "Cliente no encontrado");
-                return "redirect:/eventos/detalle/" + eventoId;
-            }
 
-            // Validar que el evento exista y tenga suficientes tickets disponibles
-            Evento evento = eventoService.obtenerEventoPorId(eventoId);
-            if (evento == null || eventoService.obtenerTicketsDisponibles(eventoId) < cantidadTickets) {
-                model.addAttribute("error", "No hay suficientes tickets disponibles");
-                return "redirect:/eventos/detalle/" + eventoId;
-            }
-            Compra compra = new Compra();
-            compra.setCliente(cliente);
-            compra.setEvento(evento);
-            compra.setCantidadTickets(cantidadTickets);
-            compra.setTotal(evento.getPrecio() * cantidadTickets);
-            compra.setFechaCompra(LocalDateTime.now());
-            
-            compraService.realizarCompra(compra);
-            
-            return "redirect:/compra-exitosa";
-        } catch (Exception e) {
-            Evento evento = eventoService.obtenerEventoPorId(eventoId);
-            model.addAttribute("evento", evento);
-            model.addAttribute("ticketsDisponibles", eventoService.obtenerTicketsDisponibles(eventoId));
-            model.addAttribute("compra", new Compra());
-            model.addAttribute("error", e.getMessage());
-            return "eventos/detalle";
-        }
-    }
 
     @GetMapping("/recaudacion")
     public String mostrarRecaudacion(Model model) {

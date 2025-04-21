@@ -1,260 +1,205 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="'Nueva Compra - Gestión de Eventos'">Nueva Compra</title>
+    <meta charset="UTF-8">
+    <title>Formulario de Compra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 </head>
-<body>
-    <div th:fragment="content">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Nueva Compra</h3>
-                        </div>
-                        <div class="card-body">
-                            <!-- Información del evento -->
-                            <div th:if="${evento != null}" class="alert alert-info mb-4">
-                                <h4 class="alert-heading" th:text="${evento.nombre}">Nombre del Evento</h4>
-                                <p class="mb-0" th:text="${evento.descripcion}">Descripción del evento</p>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p class="mb-1">
-                                            <i class="bi bi-calendar"></i>
-                                            <strong>Fecha:</strong>
-                                            <span th:text="${evento.fecha}">Fecha</span>
-                                        </p>
-                                        <p class="mb-1">
-                                            <i class="bi bi-geo-alt"></i>
-                                            <strong>Lugar:</strong>
-                                            <span th:text="${evento.lugar}">Lugar</span>
-                                        </p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p class="mb-1">
-                                            <i class="bi bi-ticket-perforated"></i>
-                                            <strong>Tickets disponibles:</strong>
-                                            <span th:text="${evento.capacidad}">Capacidad</span>
-                                        </p>
-                                        <p class="mb-1">
-                                            <i class="bi bi-tag"></i>
-                                            <strong>Precio por ticket:</strong>
-                                            <span>$<span th:text="${evento.precio}"></span></span>
-                                        </p>
-                                    </div>
+<body class="d-flex flex-column min-vh-100">
+
+    <div th:replace="layout/nav :: nav"></div>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title" th:text="${compra.id != null} ? 'Editar Compra' : 'Nueva Compra'">Nueva Compra</h3>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/compras/guardar}" th:object="${compra}" method="post" class="needs-validation" novalidate>
+                            <input type="hidden" th:field="*{id}" />
+
+                            <!-- Errores generales -->
+                            <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                                Por favor corregí los errores marcados.
+                                <div th:each="err : ${#fields.errors('*')}">
+                                    <p th:text="${err}"></p>
                                 </div>
                             </div>
 
-                            <!-- Selección de evento si evento es nulo (caso /compras/nuevo) -->
-                            <div th:if="${evento == null}" class="mb-4">
-                                <label for="eventoId" class="form-label">Evento</label>
-                                <div class="input-group">
-                                    <select class="form-select" id="eventoId" th:field="*{evento}" required>
-                                        <option value="">Seleccione un evento</option>
-                                        <option th:each="ev : ${eventos}"
-                                                th:value="${ev.id}"
-                                                th:text="${ev.nombre + ' - ' + ev.fecha}">
-                                        </option>
-                                    </select>
-                                </div>
+                            <!-- Evento -->
+                            <div class="mb-3">
+                                <label class="form-label">Evento</label>
+                                <select class="form-select" th:field="*{evento}" id="eventoSelect" required>
+                                    <option value="">-- Seleccione un evento --</option>
+                                    <option th:each="e : ${eventos}" 
+                                            th:value="${e.id}" 
+                                            th:text="${e.nombre + ' - ' + #temporals.format(e.fecha, 'dd/MM/yyyy HH:mm')}" 
+                                            th:attr="data-precio=${e.precio}, data-capacidad=${e.capacidad}">
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback" th:errors="*{evento}"></div>
                             </div>
 
-                            <!-- Selección de cliente -->
-                            <div class="mb-4">
-                                <label for="clienteId" class="form-label">Cliente</label>
+                            <!-- Cliente -->
+                            <div class="mb-3">
+                                <label class="form-label">Cliente</label>
                                 <div class="input-group">
-                                    <select class="form-select" id="clienteId" th:field="*{cliente}" required>
+                                    <select class="form-select" th:field="*{cliente}" required>
                                         <option value="">Seleccione un cliente</option>
                                         <option th:each="cliente : ${clientes}"
-                                                th:value="${cliente}"
+                                                th:value="${cliente.id}"
                                                 th:text="${cliente.nombre + ' ' + cliente.apellido + ' - DNI: ' + cliente.dni}">
                                         </option>
                                     </select>
+                                    <a th:href="@{/clientes/nuevo}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-person-plus"></i> Nuevo Cliente
+                                    </a>
+                                    <div class="invalid-feedback" th:errors="*{cliente}"></div>
                                 </div>
                             </div>
 
-                            <!-- Cantidad de tickets -->
-                            <div class="mb-4">
-                                <label for="cantidadTickets" class="form-label">Cantidad de tickets</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" id="cantidadTickets" th:field="*{cantidadTickets}"
-                                           min="1" max="${evento.capacidad}" required>
-                                    <span class="input-group-text">
-                                        <i class="bi bi-ticket-perforated"></i>
-                                    </span>
-                                </div>
+                            <!-- Cantidad de Tickets -->
+                            <div class="mb-3">
+                                <label class="form-label">Cantidad de Tickets</label>
+                                <input type="number" class="form-control" th:field="*{cantidadTickets}" id="cantidadTickets" min="1" required>
+                                <small class="text-muted" th:if="${ticketsDisponibles} != null">
+                                    Tickets disponibles: <span th:text="${ticketsDisponibles}"></span>
+                                </small>
+                                <div class="invalid-feedback" th:errors="*{cantidadTickets}"></div>
                             </div>
 
                             <!-- Resumen de compra -->
-                            <div class="alert alert-success mb-4">
+                            <div id="resumenCompra" class="alert alert-info d-none">
                                 <h5 class="alert-heading">Resumen de compra</h5>
-                                <p class="mb-1">
-                                    <strong>Tickets seleccionados:</strong>
-                                    <span id="ticketsSeleccionados">0</span>
-                                </p>
-                                <p class="mb-1">
-                                    <strong>Precio unitario:</strong>
-                                    <span id="precioUnitario">$0</span>
-                                </p>
-                                <p class="mb-1">
-                                    <strong>Total a pagar:</strong>
-                                    <span id="totalCompra">$0</span>
-                                </p>
+                                <p><strong>Precio unitario:</strong> $<span id="precioUnitario">0</span></p>
+                                <p><strong>Total a pagar:</strong> $<span id="total">0</span></p>
                             </div>
 
-                            <form th:action="@{/compras/guardar}" th:object="${compra}"
-                                  method="post" class="needs-validation" novalidate>
-                                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
-                                    Por favor corregí los errores marcados.
-                                </div>
+                            <!-- JavaScript para actualizar el resumen -->
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    const cantidadInput = document.getElementById('cantidadTickets');
+                                    const resumenDiv = document.getElementById('resumenCompra');
+                                    const precioSpan = document.getElementById('precioUnitario');
+                                    const totalSpan = document.getElementById('total');
+                                    const eventoSelect = document.getElementById('eventoSelect');
 
-                                <!-- Selección de cliente -->
-                                <div class="mb-4">
-                                    <label for="clienteId" class="form-label">Cliente</label>
-                                    <div class="input-group">
-                                        <select class="form-select" id="cliente" th:field="*{cliente}"
-                                                th:classappend="${#fields.hasErrors('cliente')} ? 'is-invalid'" required>
-                                            <option value="">Seleccione un cliente</option>
-                                            <option th:each="cliente : ${clientes}"
-                                                    th:value="${cliente}"
-                                                    th:text="${cliente.nombre + ' ' + cliente.apellido + ' - DNI: ' + cliente.dni}">
-                                            </option>
-                                        </select>
-                                        <a th:href="@{/clientes/nuevo}" class="btn btn-outline-secondary">
-                                            <i class="bi bi-person-plus"></i> Nuevo Cliente
-                                        </a>
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('clienteId')}" 
-                                             th:errors="*{clienteId}">Error en el cliente</div>
-                                    </div>
-                                </div>
+                                    function actualizarResumen() {
+                                        const cantidad = parseInt(cantidadInput.value) || 0;
+                                        const selected = eventoSelect?.selectedOptions[0];
+                                        const precio = parseFloat(selected?.dataset?.precio || 0);
+                                        const capacidad = parseInt(selected?.dataset?.capacidad || 0);
 
-                                <!-- Cantidad de tickets -->
-                                <div class="mb-4">
-                                    <label for="cantidadEntradas" class="form-label">Cantidad de Tickets</label>
-                                    <input type="number" class="form-control" id="cantidadTickets" 
-                                           th:field="*{cantidadTickets}"
-                                           min="1" th:max="${evento.capacidad}"
-                                           th:classappend="${#fields.hasErrors('cantidadTickets')} ? 'is-invalid'"
-                                           required>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('cantidadTickets')}" 
-                                         th:errors="*{cantidadTickets}">Error en la cantidad</div>
-                                </div>
+                                        if (cantidad > 0 && precio > 0) {
+                                            if (capacidad && cantidad > capacidad) {
+                                                cantidadInput.setCustomValidity(`Máximo disponible: ${capacidad}`);
+                                            } else {
+                                                cantidadInput.setCustomValidity('');
+                                            }
 
-                                <!-- Total de la compra -->
-                                <div class="mb-4">
-                                    <label for="total" class="form-label">Total</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="text" class="form-control" id="total" readonly>
-                                    </div>
-                                </div>
+                                            const total = cantidad * precio;
+                                            precioSpan.textContent = precio.toFixed(2);
+                                            totalSpan.textContent = total.toFixed(2);
+                                            resumenDiv.classList.remove('d-none');
+                                            resumenDiv.style.display = 'block';
+                                        } else {
+                                            resumenDiv.classList.add('d-none');
+                                            resumenDiv.style.display = 'none';
+                                            cantidadInput.setCustomValidity('');
+                                        }
+                                    }
 
-                                <!-- Resumen de la compra -->
-                                <div class="card bg-light mb-4">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Resumen de la compra</h5>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <p class="mb-1">Precio por ticket: 
-                                                    <span>$<span th:text="${evento.precio}"></span></span>
-                                                </p>
-                                                <p class="mb-1">Cantidad: 
-                                                    <span id="cantidadResumen">0</span>
-                                                </p>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <p class="mb-1">
-                                                    <strong>Total a pagar: </strong>
-                                                    <span id="totalResumen" class="text-primary fs-5">$0.00</span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                    cantidadInput.addEventListener('input', actualizarResumen);
+                                    eventoSelect.addEventListener('change', actualizarResumen);
 
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-cart-check"></i> Confirmar Compra
-                                    </button>
-                                    <a th:href="@{/eventos}" class="btn btn-secondary">
-                                        <i class="bi bi-x-circle"></i> Cancelar
-                                    </a>
-                                </div>
-                            </form>
-                        </div>
+                                    // Ejecutar el resumen automáticamente al cargar
+                                    actualizarResumen();
+                                });
+                            </script>
+
+                            <!-- Mensajes del backend -->
+                            <div th:if="${error}" class="alert alert-danger">
+                                <i class="bi bi-exclamation-circle"></i> <span th:text="${error}">Error</span>
+                            </div>
+
+                            <div th:if="${success}" class="alert alert-success">
+                                <i class="bi bi-check-circle"></i> Compra realizada exitosamente.
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-cart-check"></i> Confirmar Compra
+                                </button>
+                                <a th:href="@{/eventos}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </a>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    
-
+    <!-- Scripts -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            const eventoSelect = document.getElementById('eventoSelect');
             const cantidadInput = document.getElementById('cantidadTickets');
-            const precioUnitario = document.getElementById('precioUnitario');
-            const ticketsSeleccionados = document.getElementById('ticketsSeleccionados');
-            const totalCompra = document.getElementById('totalCompra');
-            const precio = parseFloat(document.querySelector('[th:text="${evento.precio}"]').textContent);
+            const resumenDiv = document.getElementById('resumenCompra');
+            const precioSpan = document.getElementById('precioUnitario');
+            const totalSpan = document.getElementById('total');
 
-            // Actualizar el precio unitario
-            precioUnitario.textContent = `$${precio.toFixed(2)}`;
-
-            // Función para actualizar el resumen
             function actualizarResumen() {
+                const selected = eventoSelect?.selectedOptions[0];
                 const cantidad = parseInt(cantidadInput.value) || 0;
-                ticketsSeleccionados.textContent = cantidad;
-                const total = cantidad * precio;
-                totalCompra.textContent = `$${total.toFixed(2)}`;
+
+                if (selected && cantidad > 0) {
+                    const precio = parseFloat(selected.dataset.precio || 0);
+                    const capacidad = parseInt(selected.dataset.capacidad || 0);
+
+                    if (cantidad > capacidad) {
+                        cantidadInput.setCustomValidity(`Máximo disponible: ${capacidad}`);
+                    } else {
+                        cantidadInput.setCustomValidity('');
+                    }
+
+                    const total = precio * cantidad;
+                    precioSpan.textContent = precio.toFixed(2);
+                    totalSpan.textContent = total.toFixed(2);
+                    resumenDiv.classList.remove('d-none');
+                } else {
+                    resumenDiv.classList.add('d-none');
+                    cantidadInput.setCustomValidity('');
+                }
             }
 
-            // Actualizar al cambiar la cantidad
+            if (eventoSelect) {
+                eventoSelect.addEventListener('change', actualizarResumen);
+            }
             cantidadInput.addEventListener('input', actualizarResumen);
-            
-            // Actualizar al cargar la página
-            actualizarResumen();
         });
     </script>
 
-    <script th:inline="javascript">
-        // Obtener el precio del evento desde Thymeleaf
-        const precioTicket = /*[[${evento.precio}]]*/ 0;
-
-        // Actualizar el resumen cuando cambie la cantidad
-        const cantidadInput = document.getElementById('cantidadEntradas');
-        const cantidadResumen = document.getElementById('cantidadResumen');
-        const totalResumen = document.getElementById('totalResumen');
-        const totalInput = document.getElementById('total');
-
-        function actualizarResumen() {
-            const cantidad = cantidadInput.value ? parseInt(cantidadInput.value) : 0;
-            const total = cantidad * precioTicket;
-            
-            cantidadResumen.textContent = cantidad;
-            totalResumen.textContent = '$' + total.toFixed(2);
-            totalInput.value = total.toFixed(2);
-        }
-
-        cantidadInput.addEventListener('input', actualizarResumen);
-        actualizarResumen(); // Actualizar al cargar la página
-
-        // Validación del formulario
+    <!-- Validación Bootstrap -->
+    <script>
         (function () {
-            'use strict'
-            var forms = document.querySelectorAll('.needs-validation')
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-        })()
+            'use strict';
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
     </script>
 </body>
 </html>

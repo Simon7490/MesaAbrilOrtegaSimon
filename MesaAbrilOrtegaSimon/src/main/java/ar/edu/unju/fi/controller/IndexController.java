@@ -26,7 +26,6 @@ public class IndexController {
         model.addAttribute("eventos", eventoService.listarEventos());
         model.addAttribute("clientes", clienteService.listarClientes());
         model.addAttribute("compras", compraService.listarCompras());
-        model.addAttribute("view", "Index");
-        return "layout/nav";
+        return "index"; // Este es el nombre del archivo index.html en /templates
     }
 }

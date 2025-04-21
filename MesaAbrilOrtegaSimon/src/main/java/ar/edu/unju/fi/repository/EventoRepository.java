@@ -2,6 +2,7 @@ package ar.edu.unju.fi.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,6 +24,11 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
      * Encuentra eventos por nombre que contenga el texto
      */
     List<Evento> findByNombreContainingIgnoreCase(String nombre);
+    
+    /**
+     * Encuentra evento por nombre exacto
+     */
+    Optional<Evento> findByNombre(String nombre);
     
     /**
      * Encuentra eventos disponibles (con capacidad > 0) y fecha futura

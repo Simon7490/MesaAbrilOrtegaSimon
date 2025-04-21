@@ -1,13 +1,43 @@
-<div th:fragment="content">
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Eventos - Gestión de Eventos'">Formulario de Evento</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validación de fecha mínima
+        const fechaInput = document.getElementById('fecha');
+        if (fechaInput) {
+            const fechaMinima = new Date();
+            fechaMinima.setMinutes(fechaMinima.getMinutes() + 1); // Añadir 1 minuto para evitar problemas de sincronización
+            fechaInput.setAttribute('min', fechaMinima.toISOString().slice(0, 16));
+            
+            // Actualizar el mensaje de error
+            fechaInput.addEventListener('invalid', function(e) {
+                if (e.target.validity.rangeUnderflow) {
+                    e.target.setCustomValidity('La fecha debe ser en el futuro');
+                } else {
+                    e.target.setCustomValidity('');
+                }
+            });
+        }
+    </script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="layout/nav :: nav"></div>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Nuevo Evento</h3>
+                        <h3 class="card-title" th:text="${evento.id != null ? 'Editar Evento' : 'Nuevo Evento'}">Nuevo Evento</h3>
                     </div>
                     <div class="card-body">
                         <form th:action="@{/eventos/nuevo}" th:object="${evento}" method="post" class="needs-validation" novalidate>
+                            <input type="hidden" th:field="*{id}" />
                             <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
                                 Por favor corregí los errores marcados.
                             </div>
@@ -30,9 +60,12 @@
                             <div class="mb-3">
                                 <label for="fecha" class="form-label">Fecha y Hora</label>
                                 <input type="datetime-local" class="form-control" id="fecha" th:field="*{fecha}"
-                                       th:classappend="${#fields.hasErrors('fecha')} ? 'is-invalid'" required>
+                                       th:classappend="${#fields.hasErrors('fecha')} ? 'is-invalid'" required
+                                       min="${#temporals.format(#temporals.now(), 'yyyy-MM-dd\'T\'HH:mm')}"
+                                       th:errorclass="is-invalid">
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('fecha')}" 
                                      th:errors="*{fecha}">Error en la fecha</div>
+                                <div class="form-text">La fecha debe ser en el futuro</div>
                             </div>
 
                             <div class="mb-3">
@@ -57,9 +90,11 @@
                             <div class="mb-3">
                                 <label for="capacidad" class="form-label">Capacidad</label>
                                 <input type="number" class="form-control" id="capacidad" th:field="*{capacidad}"
-                                       th:classappend="${#fields.hasErrors('capacidad')} ? 'is-invalid'" required>
+                                       th:classappend="${#fields.hasErrors('capacidad')} ? 'is-invalid'" required
+                                       min="0" step="1">
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('capacidad')}" 
                                      th:errors="*{capacidad}">Error en la capacidad</div>
+                                <div class="form-text">La capacidad debe ser un número positivo</div>
                             </div>
 
                             <div class="mb-3">
@@ -93,3 +128,5 @@
 </div>
 </form>
 </div>
+</body>
+</html>

@@ -16,7 +16,7 @@ import ar.edu.unju.fi.repository.CompraRepository;
 import ar.edu.unju.fi.repository.EventoRepository;
 
 @Service
-public class CompraService {
+public class CompraService implements ICompraService {
 
     @Autowired
     private CompraRepository compraRepository;
@@ -35,29 +35,65 @@ public class CompraService {
      * Realiza una nueva compra validando disponibilidad y calculando el total
      */
     @Transactional
-    public Compra realizarCompra(Compra compra) {
-        // Validar que el evento exista
-        Evento evento = eventoRepository.findById(compra.getEvento().getId())
-                .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
-
-        // Validar que el evento no haya pasado
+    public Compra guardar(Compra compra) {
+        Evento evento = compra.getEvento();
+        if (evento == null || evento.getId() == null) {
+            throw new RuntimeException("Evento no válido");
+        }
+        
         if (evento.getFecha().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("El evento ya ha pasado");
+            throw new RuntimeException("El evento ya ha finalizado");
         }
-
-        // Validar disponibilidad de tickets
-        int ticketsVendidos = compraRepository.countTicketsVendidosPorEvento(evento.getId());
-        int ticketsDisponibles = evento.getCapacidad() - ticketsVendidos;
-
-        if (compra.getCantidadTickets() > ticketsDisponibles) {
-            throw new RuntimeException("No hay suficientes tickets disponibles. Quedan " + ticketsDisponibles + " tickets.");
+        
+        if (evento.getCapacidad() < compra.getCantidadTickets()) {
+            throw new RuntimeException("No hay suficientes tickets disponibles");
         }
-
-        // Calcular total
-        compra.setTotal(evento.getPrecio() * compra.getCantidadTickets());
+        
         compra.setFechaCompra(LocalDateTime.now());
+        compra.setTotal(evento.getPrecio() * compra.getCantidadTickets());
+        compraRepository.save(compra);
+        
+        // Actualizar la capacidad del evento
+        evento.setCapacidad(evento.getCapacidad() - compra.getCantidadTickets());
+        eventoRepository.save(evento);
 
-        return compraRepository.save(compra);
+        return compra;
+    }
+
+    /**
+     * Actualiza una compra existente validando disponibilidad y calculando el total
+     */
+    @Transactional
+    public void actualizarCompra(Compra compra) {
+        Evento evento = compra.getEvento();
+        if (evento == null || evento.getId() == null) {
+            throw new RuntimeException("Evento no válido");
+        }
+        
+        if (evento.getFecha().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("El evento ya ha finalizado");
+        }
+        
+        // Obtener la compra existente para calcular la diferencia de tickets
+        Compra compraExistente = compraRepository.findById(compra.getId())
+                .orElseThrow(() -> new RuntimeException("Compra no encontrada"));
+
+        // Calcular la diferencia de tickets
+        int diferenciaTickets = compra.getCantidadTickets() - compraExistente.getCantidadTickets();
+
+        // Validar capacidad del evento
+        if (evento.getCapacidad() + compraExistente.getCantidadTickets() < compra.getCantidadTickets()) {
+            throw new RuntimeException("No hay suficientes tickets disponibles");
+        }
+
+        // Actualizar la compra
+        compra.setFechaCompra(LocalDateTime.now());
+        compra.setTotal(evento.getPrecio() * compra.getCantidadTickets());
+        compraRepository.save(compra);
+
+        // Actualizar la capacidad del evento
+        evento.setCapacidad(evento.getCapacidad() + diferenciaTickets);
+        eventoRepository.save(evento);
     }
 
     /**
@@ -78,7 +114,17 @@ public class CompraService {
         for (Object[] resultado : resultados) {
             String nombreEvento = (String) resultado[0];
             Double total = (Double) resultado[1];
-            recaudacion.put(nombreEvento, total);
+            
+            // Verificar si el evento ya ha finalizado
+            List<Evento> eventos = eventoRepository.findByNombreContainingIgnoreCase(nombreEvento);
+            if (eventos.isEmpty()) {
+                throw new RuntimeException("Evento no encontrado: " + nombreEvento);
+            }
+            
+            Evento evento = eventos.get(0);
+            if (evento.getFecha().isAfter(LocalDateTime.now())) {
+                recaudacion.put(nombreEvento, total);
+            }
         }
         
         return recaudacion;
@@ -96,6 +142,32 @@ public class CompraService {
      */
     public List<Compra> obtenerComprasPorEvento(Evento evento) {
         return compraRepository.findByEventoOrderByFechaCompraDesc(evento);
+    }
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * Elimina una compra existente
+     */
+    @Transactional
+    public void eliminar(Long id) {
+        Compra compra = compraRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Compra no encontrada"));
+        
+        Evento evento = compra.getEvento();
+        // Devolver los tickets a la capacidad del evento
+        evento.setCapacidad(evento.getCapacidad() + compra.getCantidadTickets());
+        eventoRepository.save(evento);
+        
+        compraRepository.delete(compra);
     }
 
     /**

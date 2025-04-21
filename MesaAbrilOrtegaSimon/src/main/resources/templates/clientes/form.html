@@ -1,3 +1,14 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Clientes - Formulario de Cliente'">Formulario de Cliente</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="layout/nav :: nav"></div>
 <div th:fragment="content">
         <div class="container">
             <div class="row justify-content-center">
@@ -9,11 +20,12 @@
                             </h3>
                         </div>
                         <div class="card-body">
-                            <!-- Formulario para NUEVO cliente -->
-<form th:if="${cliente.id == null}" th:action="@{/clientes/nuevo}" th:object="${cliente}" method="post" class="needs-validation" novalidate>
+                            <!-- Formulario para NUEVO o EDITAR cliente -->
+<form th:action="@{/clientes/guardar}" th:object="${cliente}" method="post" class="needs-validation" novalidate>
     <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
         Por favor corregí los errores marcados.
     </div>
+    <input type="hidden" th:field="*{id}" />
                                 
                                 <div class="mb-3">
                                     <label for="nombre" class="form-label">Nombre</label>
@@ -42,7 +54,7 @@
                                 <div class="mb-3">
                                     <label for="dni" class="form-label">DNI</label>
                                     <input type="text" class="form-control" id="dni" th:field="*{dni}"
-                                           pattern="\\d{8}" maxlength="8"
+                                           pattern="\d{8}" maxlength="8"
                                            th:classappend="${#fields.hasErrors('dni')} ? 'is-invalid'" required>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('dni')}" 
                                          th:errors="*{dni}">Error en el DNI</div>
@@ -66,3 +78,5 @@
     </div>
 
 </div>
+</body>
+</html>
